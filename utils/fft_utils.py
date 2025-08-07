@@ -2,6 +2,7 @@ import torch
 import torch.fft as fft
 import math
 
+
 def fourier_filter(x, scale, d_s=0.25):
     dtype = x.dtype
     x = x.type(torch.float32)
@@ -73,11 +74,11 @@ def gaussian_low_pass_filter(shape, d_s=0.25, d_t=0.25, dims=(-1,)):
         return mask
 
     ranges = [torch.linspace(-1, 1, s) for s in size]
-    grid = torch.meshgrid(*ranges, indexing='ij')
-    d_square = sum((g ** 2) for g in grid)
+    grid = torch.meshgrid(*ranges, indexing="ij")
+    d_square = sum((g**2) for g in grid)
 
     # Gaussian filter equation
-    mask[tuple(slice(None) for _ in dims)] = torch.exp(-d_square / (2 * d_s ** 2))
+    mask[tuple(slice(None) for _ in dims)] = torch.exp(-d_square / (2 * d_s**2))
     return mask
 
 
@@ -98,11 +99,11 @@ def butterworth_low_pass_filter(shape, n=4, d_s=0.25, d_t=0.25, dims=(-1,)):
         return mask
 
     ranges = [torch.linspace(-1, 1, s) for s in size]
-    grid = torch.meshgrid(*ranges, indexing='ij')
-    d_square = sum((g ** 2) for g in grid)
+    grid = torch.meshgrid(*ranges, indexing="ij")
+    d_square = sum((g**2) for g in grid)
 
     # Butterworth filter equation
-    mask[tuple(slice(None) for _ in dims)] = 1 / (1 + (d_square / d_s ** 2) ** n)
+    mask[tuple(slice(None) for _ in dims)] = 1 / (1 + (d_square / d_s**2) ** n)
     return mask
 
 
@@ -122,11 +123,11 @@ def ideal_low_pass_filter(shape, d_s=0.25, d_t=0.25, dims=(-1,)):
         return mask
 
     ranges = [torch.linspace(-1, 1, s) for s in size]
-    grid = torch.meshgrid(*ranges, indexing='ij')
-    d_square = sum((g ** 2) for g in grid)
+    grid = torch.meshgrid(*ranges, indexing="ij")
+    d_square = sum((g**2) for g in grid)
 
     # Ideal filter equation
-    mask[tuple(slice(None) for _ in dims)] = (d_square <= d_s ** 2).float()
+    mask[tuple(slice(None) for _ in dims)] = (d_square <= d_s**2).float()
     return mask
 
 

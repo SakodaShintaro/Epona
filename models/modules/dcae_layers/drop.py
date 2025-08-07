@@ -35,7 +35,9 @@ def apply_droppath(
     all_valid_blocks = []
     for m in network.modules():
         for name, sub_module in m.named_children():
-            if isinstance(sub_module, ResidualBlock) and isinstance(sub_module.shortcut, IdentityLayer):
+            if isinstance(sub_module, ResidualBlock) and isinstance(
+                sub_module.shortcut, IdentityLayer
+            ):
                 all_valid_blocks.append((m, name, sub_module))
     all_valid_blocks = all_valid_blocks[skip:]
     for i, (m, name, sub_module) in enumerate(all_valid_blocks):

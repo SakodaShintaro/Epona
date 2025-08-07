@@ -11,8 +11,10 @@ from models.modules.dit_modules.layers import (
     timestep_embedding,
 )
 
+
 def mean_flat(tensor):
-    return tensor.mean(dim=list(range(1, len(tensor.shape))))    
+    return tensor.mean(dim=list(range(1, len(tensor.shape))))
+
 
 @dataclass
 class TrajParams:
@@ -52,7 +54,9 @@ class TrajDiT(nn.Module):
         self.time_in = MLPEmbedder(in_dim=256, hidden_dim=self.hidden_size)
         # self.vector_in = MLPEmbedder(params.vec_in_dim, self.hidden_size)
         self.guidance_in = (
-            MLPEmbedder(in_dim=256, hidden_dim=self.hidden_size) if params.guidance_embed else nn.Identity()
+            MLPEmbedder(in_dim=256, hidden_dim=self.hidden_size)
+            if params.guidance_embed
+            else nn.Identity()
         )
         self.cond_in = nn.Linear(params.context_in_dim, self.hidden_size)
 
@@ -112,42 +116,51 @@ class TrajDiT(nn.Module):
 
         traj = self.final_layer(traj, vec)  # (N, T, patch_size ** 2 * out_channels)
         return traj
-    
-    def training_losses(self, 
-                        traj: Tensor,     # (B, L, C)
-                        traj_ids: Tensor,
-                        cond: Tensor,
-                        cond_ids: Tensor,
-                        t: Tensor,
-                        guidance: Tensor | None = None,
-                        noise: Tensor | None = None,
-                        return_predict=False
-                    ) -> Tensor:
+
+    def training_losses(
+        self,
+        traj: Tensor,  # (B, L, C)
+        traj_ids: Tensor,
+        cond: Tensor,
+        cond_ids: Tensor,
+        t: Tensor,
+        guidance: Tensor | None = None,
+        noise: Tensor | None = None,
+        return_predict=False,
+    ) -> Tensor:
         if noise is None:
             noise = torch.randn_like(traj)
         terms = {}
-        
-        x_t = t * traj + (1. - t) * noise
+
+        x_t = t * traj + (1.0 - t) * noise
         target = traj - noise
-        pred = self(traj=x_t, traj_ids=traj_ids, cond=cond, cond_ids=cond_ids, timesteps=t.reshape(-1), guidance=guidance)
+        pred = self(
+            traj=x_t,
+            traj_ids=traj_ids,
+            cond=cond,
+            cond_ids=cond_ids,
+            timesteps=t.reshape(-1),
+            guidance=guidance,
+        )
         assert pred.shape == target.shape == traj.shape
-        predict = x_t + pred * (1. - t)
+        predict = x_t + pred * (1.0 - t)
         terms["mse"] = mean_flat((target - pred) ** 2)
-        
+
         terms["loss"] = terms["mse"].mean()
         if return_predict:
             terms["predict"] = predict
         else:
             terms["predict"] = None
         return terms
-        
-    def sample(self,
-                traj: Tensor,
-                traj_ids: Tensor,
-                cond: Tensor,
-                cond_ids: Tensor,
-                timesteps: list[float],
-            ):
+
+    def sample(
+        self,
+        traj: Tensor,
+        traj_ids: Tensor,
+        cond: Tensor,
+        cond_ids: Tensor,
+        timesteps: list[float],
+    ):
         for t_curr, t_prev in zip(timesteps[:-1], timesteps[1:]):
             t_vec = torch.full((traj.shape[0],), t_curr, dtype=traj.dtype, device=traj.device)
             pred = self(

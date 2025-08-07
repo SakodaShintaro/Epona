@@ -5,11 +5,9 @@ import math
 import numpy as np
 import torch
 import random
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 from scipy.spatial.transform import Rotation as R
-import shutil
 from PIL import Image
-from utils.comm import _is_free_port, _find_free_port, _init_dist_envi
 
 
 def radians_to_degrees(radians):

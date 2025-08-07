@@ -9,9 +9,7 @@ import argparse
 from einops import rearrange
 import numpy as np
 import torch.distributed as dist
-import torch.utils
 from torch.utils.data import DataLoader, Subset
-import torch.utils.data
 from torch.utils.tensorboard import SummaryWriter
 from utils.merge_dataset import MixedBatchSampler
 import torch.multiprocessing as mp

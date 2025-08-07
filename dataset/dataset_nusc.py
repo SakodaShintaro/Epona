@@ -4,19 +4,15 @@ import os
 import numpy as np
 import torch
 import random
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import Dataset
 from scipy.spatial.transform import Rotation as R
-from einops import rearrange
-import imageio
-from PIL import Image
 import sys
 
 root_path = os.path.abspath(__file__)
 root_path = "/".join(root_path.split("/")[:-2])
 print(root_path)
 sys.path.append(root_path)
-from dataset.datasets_utils import reverse_seq_data, get_meta_data
-# import debugpy; debugpy.connect(("10.34.8.81", 5999))
+from dataset.datasets_utils import get_meta_data
 
 
 def quaternion_to_rotation_matrix(q):

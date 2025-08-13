@@ -21,7 +21,6 @@
 # --------------------------------------------------------------------------
 
 
-
 import torch
 from torch.utils.data import (
     BatchSampler,
@@ -36,23 +35,23 @@ class MixedBatchSampler(BatchSampler):
     """
 
     def __init__(
-        self, 
-        src_dataset_ls, 
-        batch_size, 
-        rank, 
-        seed, 
-        num_replicas, 
-        drop_last=True, 
-        shuffle=True, 
-        prob=None, 
-        generator=None
+        self,
+        src_dataset_ls,
+        batch_size,
+        rank,
+        seed,
+        num_replicas,
+        drop_last=True,
+        shuffle=True,
+        prob=None,
+        generator=None,
     ):
         self.base_sampler = None
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.drop_last = drop_last
         self.generator = generator
-        self.prob_generator = torch.Generator().manual_seed(seed+rank*seed)
+        self.prob_generator = torch.Generator().manual_seed(seed + rank * seed)
 
         self.src_dataset_ls = src_dataset_ls
         self.n_dataset = len(self.src_dataset_ls)
@@ -71,9 +70,7 @@ class MixedBatchSampler(BatchSampler):
         if self.shuffle:
             self.src_batch_samplers = [
                 BatchSampler(
-                    sampler=RandomSampler(
-                        ds, replacement=False, generator=self.generator
-                    ),
+                    sampler=RandomSampler(ds, replacement=False, generator=self.generator),
                     batch_size=self.batch_size,
                     drop_last=self.drop_last,
                 )
@@ -88,15 +85,15 @@ class MixedBatchSampler(BatchSampler):
                 )
                 for ds in self.src_dataset_ls
             ]
-        self.raw_batches = [
-            list(bs) for bs in self.src_batch_samplers
-        ]  # index in original dataset
+        self.raw_batches = [list(bs) for bs in self.src_batch_samplers]  # index in original dataset
 
         # start dist
         self.raw_batches_split = []
         for i in range(len(self.raw_batches)):
             batch = self.raw_batches[i]
-            self.raw_batches_split.append(list(batch[self.rank:self.dataset_length[i]:self.num_replicas]))
+            self.raw_batches_split.append(
+                list(batch[self.rank : self.dataset_length[i] : self.num_replicas])
+            )
 
         self.n_batches = [len(b) for b in self.raw_batches_split]
         self.n_total_batch = sum(self.n_batches)
@@ -117,13 +114,20 @@ class MixedBatchSampler(BatchSampler):
         """
         for i in range(self.n_total_batch):
             idx_ds = torch.multinomial(
-                self.prob, 1, replacement=True, generator=self.prob_generator,
+                self.prob,
+                1,
+                replacement=True,
+                generator=self.prob_generator,
             ).item()
 
             # if batch list is empty, generate new list
             if 0 == len(self.raw_batches_split[idx_ds]):
                 # self.raw_batches[idx_ds] = list(self.src_batch_samplers[idx_ds])
-                self.raw_batches_split[idx_ds] = list(self.raw_batches[idx_ds][self.rank:self.dataset_length[idx_ds]:self.num_replicas])
+                self.raw_batches_split[idx_ds] = list(
+                    self.raw_batches[idx_ds][
+                        self.rank : self.dataset_length[idx_ds] : self.num_replicas
+                    ]
+                )
             # get a batch from list
             batch_raw = self.raw_batches_split[idx_ds].pop()
             # shift by cumulative dataset length
@@ -133,7 +137,7 @@ class MixedBatchSampler(BatchSampler):
             yield batch
 
     def __len__(self):
-        return self.n_total_batch 
+        return self.n_total_batch
 
 
 # Unit test
@@ -156,9 +160,7 @@ if "__main__" == __name__:
     dataset_2 = SimpleDataset(200, 20)
     dataset_3 = SimpleDataset(1000, 50)
 
-    concat_dataset = ConcatDataset(
-        [dataset_1, dataset_2, dataset_3]
-    )  # will directly concatenate
+    concat_dataset = ConcatDataset([dataset_1, dataset_2, dataset_3])  # will directly concatenate
 
     mixed_sampler = MixedBatchSampler(
         src_dataset_ls=[dataset_1, dataset_2, dataset_3],
@@ -176,7 +178,3 @@ if "__main__" == __name__:
 
     for d in loader:
         print(d)
-
-
-
-

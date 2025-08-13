@@ -7,7 +7,12 @@ from einops import rearrange, repeat
 from PIL import Image
 from safetensors.torch import load_file as load_sft
 from torch import nn
-from transformers import AutoModelForDepthEstimation, AutoProcessor, SiglipImageProcessor, SiglipVisionModel
+from transformers import (
+    AutoModelForDepthEstimation,
+    AutoProcessor,
+    SiglipImageProcessor,
+    SiglipVisionModel,
+)
 
 # from flux.util import print_load_warning
 
@@ -17,7 +22,9 @@ class DepthImageEncoder:
 
     def __init__(self, device):
         self.device = device
-        self.depth_model = AutoModelForDepthEstimation.from_pretrained(self.depth_model_name).to(device)
+        self.depth_model = AutoModelForDepthEstimation.from_pretrained(self.depth_model_name).to(
+            device
+        )
         self.processor = AutoProcessor.from_pretrained(self.depth_model_name)
 
     def __call__(self, img: torch.Tensor) -> torch.Tensor:
@@ -94,7 +101,9 @@ class ReduxImageEncoder(nn.Module):
         self.normalize = SiglipImageProcessor.from_pretrained(self.siglip_model_name)
 
     def __call__(self, x: Image.Image) -> torch.Tensor:
-        imgs = self.normalize.preprocess(images=[x], do_resize=True, return_tensors="pt", do_convert_rgb=True)
+        imgs = self.normalize.preprocess(
+            images=[x], do_resize=True, return_tensors="pt", do_convert_rgb=True
+        )
 
         _encoded_x = self.siglip(**imgs.to(device=self.device, dtype=self.dtype)).last_hidden_state
 

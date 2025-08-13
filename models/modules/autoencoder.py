@@ -65,7 +65,9 @@ class ResnetBlock(nn.Module):
         self.norm2 = nn.GroupNorm(num_groups=32, num_channels=out_channels, eps=1e-6, affine=True)
         self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, stride=1, padding=1)
         if self.in_channels != self.out_channels:
-            self.nin_shortcut = nn.Conv2d(in_channels, out_channels, kernel_size=1, stride=1, padding=0)
+            self.nin_shortcut = nn.Conv2d(
+                in_channels, out_channels, kernel_size=1, stride=1, padding=0
+            )
 
     def forward(self, x):
         h = x
@@ -311,13 +313,18 @@ class AutoEncoder(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         return self.decode(self.encode(x))
-    
+
+
 def VAE_Flux(**kwargs):
     return AutoEncoder(AutoEncoderParams(**kwargs))
+
+
 def DCAE_f64c128(**kwargs):
     return DCAE(dc_ae_f64c128("dc-ae-f64c128-in-1.0", **kwargs))
+
+
 def DCAE_f32c32(**kwargs):
     return DCAE(dc_ae_f32c32("dc-ae-f32c32-mix-1.0", **kwargs))
 
 
-VAE = {'Flux': VAE_Flux, 'DCAE_f64c128': DCAE_f64c128, 'DCAE_f32c32': DCAE_f32c32}
+VAE = {"Flux": VAE_Flux, "DCAE_f64c128": DCAE_f64c128, "DCAE_f32c32": DCAE_f32c32}
